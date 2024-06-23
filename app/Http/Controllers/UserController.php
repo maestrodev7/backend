@@ -48,8 +48,11 @@ class UserController extends Controller
             $user->phoneNumber = $request->input('phoneNumber');
             $user->role = $request->input('role');
             $user->save();
+            $token = $user->createToken("auth_token",["*"],now()->addHour(2))->plainTextToken;
             $response = [
                 "message"=>"user saved successfully",
+                "access_token"=>$token,
+                "token_type"=>"Barrer",
                 "user_id"=>$user->id,
             ];
             return response()->json($response,201);
