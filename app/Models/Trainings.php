@@ -26,4 +26,7 @@ class Trainings extends Model
     public function trainer(){
         return $this->belongsTo(User::class,"trainer_id");
     }
+    public function registration(){
+        return $this->hasMany(Registration::class);
+    }
 }
