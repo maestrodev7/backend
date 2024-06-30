@@ -10,6 +10,8 @@ use App\Http\Controllers\RegistrationController;
 Route::prefix('v1')->group(function(){
     Route::apiResource('users',UserController::class);
     Route::post('login',[AuthController::class,'login']);
-    Route::apiResource('trainings',TrainingController::class);
-    Route::apiResource('registrations',RegistrationController::class);
+    Route::middleware('custom.auth')->group(function(){
+        Route::apiResource('trainings',TrainingController::class);
+        Route::apiResource('registrations',RegistrationController::class);
+    });
 });

@@ -12,7 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'custom.auth'=>\App\Http\Middleware\EnsureTokenValid::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
