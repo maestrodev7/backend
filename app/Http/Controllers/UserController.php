@@ -2,24 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\UserDTO;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserController extends Controller
 {
+    private UserRepository $userrepository;
+    public function __construct(UserRepository $userRepository) {
+        $this->userrepository = $userRepository;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         try {
-            $user = User::all();
+            $user = $this->userrepository->getAll();
             return response()->json($user,200);
         }catch (QueryException $e) {
             return response()->json([
@@ -40,14 +45,21 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try {
-            $user = new User();
-            $user->id = Str::uuid();
-            $user->username = $request->input('username');
-            $user->email = $request->input('email');
-            $user->password = Hash::make($request->input('password'));
-            $user->phoneNumber = $request->input('phoneNumber');
-            $user->role = $request->input('role');
-            $user->save();
+            $request->validate([
+                'username' => 'required',
+                'email' => 'required',
+                'phoneNumber' => 'required|string',
+                'password' => 'required|string',
+                'role' => 'required|string',
+            ]);
+            $userDTO =  new UserDTO(
+                $request->input('username'),
+                $request->input('email'),
+                $request->input('role'),
+                $request->input('phoneNumber'),
+                $request->input('password'),
+            );
+            $user = $this->userrepository->create($userDTO);
             $token = $user->createToken("auth_token",["*"],now()->addHour(2))->plainTextToken;
             $response = [
                 "message"=>"user saved successfully",
@@ -56,6 +68,7 @@ class UserController extends Controller
                 "user_id"=>$user->id,
             ];
             return response()->json($response,201);
+           
         } catch (ValidationException $e) {
             $response = [
                 "message"=>"Validation error",
@@ -106,12 +119,15 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
+
+        
         try {
             $user = User::findOrFail($id);
             $user->username = $request->input("username");
             $user->email = $request->input("email");
             $user->phoneNumber = $request->input("phoneNumber");
             $user->password = Hash::make($request->input('password'));
+            $user->role = $request->input ('role');
             $user->save();
             $response = [
                 "message"=>"user updated successfully",
